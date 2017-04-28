@@ -1,6 +1,103 @@
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
+extern crate chrono;
+
+use chrono::NaiveDateTime;
+
+#[derive(Serialize, Deserialize)]
+pub struct Locations {
+    pub locations: Vec<Location>,
+}
+
+impl Locations {
+    fn new(json: &str) -> Locations {
+        serde_json::from_str(json).unwrap()
+    }
+
+    fn average_time(&self) -> i64 {
+        let mut time = 0;
+        for i in 1..self.locations.len() {
+            time += self.locations[i - 1].timestamp.timestamp() -
+                    self.locations[i].timestamp.timestamp()
+        }
+        time / (self.locations.len() as i64)
+    }
+
+    fn find_closest(&self, time: NaiveDateTime) -> Location {
+        let mut index = -1;
+        let mut last_index = 0;
+        let mut distance = self.locations[0].timestamp.signed_duration_since(time);
+        let average = self.average_time();
+        while index != last_index {
+            last_index = index;
+            index = distance.num_seconds() / average;
+            index += last_index;
+            distance = self.locations[index as usize]
+                .timestamp
+                .signed_duration_since(time);
+        }
+        self.locations[index as usize]
+    }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub struct Location {
+    #[serde(rename="timestampMs", deserialize_with="parse_date")]
+    pub timestamp: NaiveDateTime,
+    #[serde(rename="latitudeE7", deserialize_with="parse_location")]
+    pub latitude: f32,
+    #[serde(rename="longitudeE7", deserialize_with="parse_location")]
+    pub longitude: f32,
+    pub accuracy: i32,
+    pub altitude: Option<i32>,
+}
+
+fn parse_date<D>(de: D) -> Result<NaiveDateTime, D::Error>
+    where D: serde::Deserializer
+{
+    let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
+    match deser_result {
+        serde_json::Value::String(ref s) => {
+            Ok(NaiveDateTime::from_timestamp(s.parse::<i64>().unwrap() / 1000, 0))
+        }
+        _ => Err(serde::de::Error::custom("Unexpected value")),
+    }
+}
+
+fn parse_location<D>(de: D) -> Result<f32, D::Error>
+    where D: serde::Deserializer
+{
+    let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
+    match deser_result {
+        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0) as f32),
+        _ => Err(serde::de::Error::custom("Unexpected value")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
     fn it_works() {
+        let test_data = r#"{"locations" : [ {
+                            "timestampMs" : "1491801919709",
+                            "latitudeE7" : 500373489,
+                            "longitudeE7" : 83320934,
+                            "accuracy" : 19,
+                            "activitys" : [ {
+                                "timestampMs" : "1491802042056",
+                                "activities" : [ {
+                                    "type" : "still",
+                                    "confidence" : 100
+                                } ]
+                                }, {
+                                "timestampMs" : "1491801923049",
+                                "activities" : [ {
+                                "type" : "still",
+                                "confidence" : 100
+                                } ]
+                            } ]
+                            }"#;
     }
 }
