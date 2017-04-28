@@ -1,0 +1,6 @@
+[package]
+name = "location_history"
+version = "0.1.0"
+authors = ["Eric Trombly <etrombly@yahoo.com>"]
+
+[dependencies]
