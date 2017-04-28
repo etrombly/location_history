@@ -2,6 +2,12 @@
 name = "location_history"
 version = "0.1.0"
 authors = ["Eric Trombly <etrombly@yahoo.com>"]
+repository = "https://github.com/etrombly/location_history.git"
+homepage = "https://github.com/etrombly/location_history.git"
+license = "MIT"
+readme = "README.md"
+documentation = "http://killercup.github.io/hsl-rs/"
+description = "Parse google LocationHistory.json"
 
 [dependencies]
 serde = "0.9"

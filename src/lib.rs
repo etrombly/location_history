@@ -12,11 +12,11 @@ pub struct Locations {
 }
 
 impl Locations {
-    fn new(json: &str) -> Locations {
+    pub fn new(json: &str) -> Locations {
         serde_json::from_str(json).unwrap()
     }
 
-    fn average_time(&self) -> i64 {
+    pub fn average_time(&self) -> i64 {
         let mut time = 0;
         for i in 1..self.locations.len() {
             time += self.locations[i - 1].timestamp.timestamp() -
@@ -25,7 +25,7 @@ impl Locations {
         time / (self.locations.len() as i64)
     }
 
-    fn find_closest(&self, time: NaiveDateTime) -> Location {
+    pub fn find_closest(&self, time: NaiveDateTime) -> Location {
         let mut index = -1;
         let mut last_index = 0;
         let mut distance = self.locations[0].timestamp.signed_duration_since(time);
