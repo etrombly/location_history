@@ -13,7 +13,9 @@ pub struct Locations {
 
 impl Locations {
     pub fn new(json: &str) -> Locations {
-        serde_json::from_str(json).unwrap()
+        let mut tmp: Locations = serde_json::from_str(json).unwrap();
+        tmp.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+        tmp
     }
 
     pub fn average_time(&self) -> i64 {
@@ -26,19 +28,19 @@ impl Locations {
     }
 
     pub fn find_closest(&self, time: NaiveDateTime) -> Location {
-        let mut index = -1;
-        let mut last_index = 0;
-        let mut distance = self.locations[0].timestamp.signed_duration_since(time);
-        let average = self.average_time();
-        while index != last_index {
-            last_index = index;
-            index = distance.num_seconds() / average;
-            index += last_index;
-            distance = self.locations[index as usize]
-                .timestamp
-                .signed_duration_since(time);
+        let result = self.locations.binary_search_by(|x| x.timestamp.cmp(&time));
+        let index = match result {
+            Ok(x) => x,
+            // if this is 0 or the len of locations return an error
+            Err(x) => x,
+        };
+        println!("{} {}", index, self.locations.len());
+        if index < self.locations.len(){
+            self.locations[index]
+        } else {
+            // make this an error instead
+            self.locations[0]
         }
-        self.locations[index as usize]
     }
 }
 
