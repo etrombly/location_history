@@ -27,20 +27,25 @@ impl Locations {
         time / (self.locations.len() as i64)
     }
 
-    pub fn find_closest(&self, time: NaiveDateTime) -> Location {
+    pub fn find_closest(&self, time: NaiveDateTime) -> Option<Location> {
         let result = self.locations.binary_search_by(|x| x.timestamp.cmp(&time));
         let index = match result {
-            Ok(x) => x,
-            // if this is 0 or the len of locations return an error
-            Err(x) => x,
+            Ok(x) => Some(x),
+            // if this is 0 or the len of locations return None
+            Err(x) => {
+                if x > 0 && x < self.locations.len() { 
+                    Some(x) 
+                } else { 
+                    None 
+                }
+            },
         };
-        println!("{} {}", index, self.locations.len());
-        if index < self.locations.len(){
-            self.locations[index]
-        } else {
-            // make this an error instead
-            self.locations[0]
+        if let Some(x) = index {
+            if x < self.locations.len(){
+                return Some(self.locations[x])
+            }
         }
+        None
     }
 }
 
