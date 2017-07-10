@@ -14,7 +14,7 @@ pub struct Locations {
 impl Locations {
     pub fn new(json: &str) -> Locations {
         let mut tmp: Locations = serde_json::from_str(json).unwrap();
-        tmp.locations.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        tmp.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
         tmp
     }
 
