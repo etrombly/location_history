@@ -61,8 +61,8 @@ pub struct Location {
     pub altitude: Option<i32>,
 }
 
-fn parse_date<D>(de: D) -> Result<NaiveDateTime, D::Error>
-    where D: serde::Deserializer
+fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
+    where D: serde::Deserializer<'de>
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
@@ -73,8 +73,8 @@ fn parse_date<D>(de: D) -> Result<NaiveDateTime, D::Error>
     }
 }
 
-fn parse_location<D>(de: D) -> Result<f32, D::Error>
-    where D: serde::Deserializer
+fn parse_location<'de, D>(de: D) -> Result<f32, D::Error>
+    where D: serde::Deserializer<'de>
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
