@@ -50,14 +50,10 @@ impl Locations {
 
 
     pub fn filter_outliers(&mut self) {
-        let mut tmp: Vec<Location> = Vec::new();
-        for (index, location) in self.locations.iter().enumerate() {
-            if index < self.locations.len() - 1{
-                if location.speed_kmhr(&self.locations[index + 1]) < 400.0 {
+        let mut tmp = vec![self.locations[0]];
+        for location in &self.locations {
+            if location.speed_kmhr(&tmp[tmp.len() - 1]) < 400.0 {
                     tmp.push(*location);
-                }
-            } else {
-                tmp.push(*location);
             }
         }
         println!("{} {}", self.locations.len(), tmp.len());
