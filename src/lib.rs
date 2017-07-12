@@ -54,9 +54,9 @@ pub struct Location {
     #[serde(rename="timestampMs", deserialize_with="parse_date")]
     pub timestamp: NaiveDateTime,
     #[serde(rename="latitudeE7", deserialize_with="parse_location")]
-    pub latitude: f32,
+    pub latitude: f64,
     #[serde(rename="longitudeE7", deserialize_with="parse_location")]
-    pub longitude: f32,
+    pub longitude: f64,
     pub accuracy: i32,
     pub altitude: Option<i32>,
 }
@@ -73,12 +73,12 @@ fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
     }
 }
 
-fn parse_location<'de, D>(de: D) -> Result<f32, D::Error>
+fn parse_location<'de, D>(de: D) -> Result<f64, D::Error>
     where D: serde::Deserializer<'de>
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
-        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0) as f32),
+        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0)),
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
