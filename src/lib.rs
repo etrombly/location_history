@@ -47,6 +47,24 @@ impl Locations {
         }
         None
     }
+
+
+    pub fn filter_outliers(&mut self) {
+        let mut tmp: Vec<Location> = Vec::new();
+        for (index, location) in self.locations.iter().enumerate() {
+            if index < self.locations.len() - 1{
+                if location.speed_kmhr(&self.locations[index + 1]) < 400.0 {
+                    tmp.push(*location);
+                }
+            } else {
+                tmp.push(*location);
+            }
+        }
+        println!("{} {}", self.locations.len(), tmp.len());
+        self.locations = tmp;
+    }
+
+
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -59,6 +77,27 @@ pub struct Location {
     pub longitude: f64,
     pub accuracy: i32,
     pub altitude: Option<i32>,
+}
+
+impl Location {
+    pub fn haversine_distance(&self, other: &Location) -> f64 {
+        let long1 = self.longitude.to_radians();
+        let long2 = other.longitude.to_radians();
+        let lat1 = self.latitude.to_radians();
+        let lat2 = other.latitude.to_radians();
+        let dlon = long1 - long2;
+        let dlat = lat1 - lat2;
+        let a = (dlat / 2.0).sin() + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
+        let c = 2.0 * a.sqrt().asin();
+        c * 6371000.0
+    }
+
+    pub fn speed_kmhr(&self, other: &Location) -> f64 {
+        let dist = self.haversine_distance(&other);
+        let time = self.timestamp.timestamp() - other.timestamp.timestamp();
+        let meter_second = dist / time as f64;
+        meter_second * 3.6
+    }
 }
 
 fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
