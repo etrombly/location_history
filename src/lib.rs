@@ -52,11 +52,10 @@ impl Locations {
     pub fn filter_outliers(&mut self) {
         let mut tmp = vec![self.locations[0]];
         for location in &self.locations {
-            if location.speed_kmhr(&tmp[tmp.len() - 1]) < 400.0 {
+            if location.speed_kmhr(&tmp[tmp.len() - 1]) < 300.0 {
                     tmp.push(*location);
             }
         }
-        println!("{} {}", self.locations.len(), tmp.len());
         self.locations = tmp;
     }
 
@@ -81,9 +80,9 @@ impl Location {
         let long2 = other.longitude.to_radians();
         let lat1 = self.latitude.to_radians();
         let lat2 = other.latitude.to_radians();
-        let dlon = long1 - long2;
-        let dlat = lat1 - lat2;
-        let a = (dlat / 2.0).sin() + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
+        let dlon = long2 - long1;
+        let dlat = lat2 - lat1;
+        let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
         let c = 2.0 * a.sqrt().asin();
         c * 6371000.0
     }
@@ -91,8 +90,12 @@ impl Location {
     pub fn speed_kmhr(&self, other: &Location) -> f64 {
         let dist = self.haversine_distance(&other);
         let time = self.timestamp.timestamp() - other.timestamp.timestamp();
-        let meter_second = dist / time as f64;
-        meter_second * 3.6
+        if time > 0 {
+            let meter_second = dist / time as f64;
+            meter_second * 3.6
+        } else {
+            dist / 1000.0
+        }
     }
 }
 
