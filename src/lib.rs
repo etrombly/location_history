@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 extern crate serde;
 extern crate serde_json;
 #[macro_use]
@@ -52,7 +54,7 @@ impl Locations {
     pub fn filter_outliers(&mut self) {
         let mut tmp = vec![self.locations[0]];
         for location in &self.locations {
-            if location.speed_kmhr(&tmp[tmp.len() - 1]) < 300.0 {
+            if location.speed_kmh(&tmp[tmp.len() - 1]) < 300.0 {
                 tmp.push(*location);
             }
         }
@@ -85,7 +87,7 @@ impl Location {
         c * 6371000.0
     }
 
-    pub fn speed_kmhr(&self, other: &Location) -> f64 {
+    pub fn speed_kmh(&self, other: &Location) -> f64 {
         let dist = self.haversine_distance(other);
         let time = self.timestamp.timestamp() - other.timestamp.timestamp();
         if time > 0 {
