@@ -22,7 +22,7 @@ impl Locations {
         let mut time = 0;
         for i in 1..self.locations.len() {
             time += self.locations[i - 1].timestamp.timestamp() -
-                    self.locations[i].timestamp.timestamp()
+                self.locations[i].timestamp.timestamp()
         }
         time / (self.locations.len() as i64)
     }
@@ -33,16 +33,16 @@ impl Locations {
             Ok(x) => Some(x),
             // if this is 0 or the len of locations return None
             Err(x) => {
-                if x > 0 && x < self.locations.len() { 
-                    Some(x) 
-                } else { 
-                    None 
+                if x > 0 && x < self.locations.len() {
+                    Some(x)
+                } else {
+                    None
                 }
-            },
+            }
         };
         if let Some(x) = index {
-            if x < self.locations.len(){
-                return Some(self.locations[x])
+            if x < self.locations.len() {
+                return Some(self.locations[x]);
             }
         }
         None
@@ -53,22 +53,20 @@ impl Locations {
         let mut tmp = vec![self.locations[0]];
         for location in &self.locations {
             if location.speed_kmhr(&tmp[tmp.len() - 1]) < 300.0 {
-                    tmp.push(*location);
+                tmp.push(*location);
             }
         }
         self.locations = tmp;
     }
-
-
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Location {
-    #[serde(rename="timestampMs", deserialize_with="parse_date")]
+    #[serde(rename = "timestampMs", deserialize_with = "parse_date")]
     pub timestamp: NaiveDateTime,
-    #[serde(rename="latitudeE7", deserialize_with="parse_location")]
+    #[serde(rename = "latitudeE7", deserialize_with = "parse_location")]
     pub latitude: f64,
-    #[serde(rename="longitudeE7", deserialize_with="parse_location")]
+    #[serde(rename = "longitudeE7", deserialize_with = "parse_location")]
     pub longitude: f64,
     pub accuracy: i32,
     pub altitude: Option<i32>,
@@ -88,7 +86,7 @@ impl Location {
     }
 
     pub fn speed_kmhr(&self, other: &Location) -> f64 {
-        let dist = self.haversine_distance(&other);
+        let dist = self.haversine_distance(other);
         let time = self.timestamp.timestamp() - other.timestamp.timestamp();
         if time > 0 {
             let meter_second = dist / time as f64;
@@ -100,23 +98,28 @@ impl Location {
 }
 
 fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
-    where D: serde::Deserializer<'de>
+where
+    D: serde::Deserializer<'de>,
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
         serde_json::Value::String(ref s) => {
-            Ok(NaiveDateTime::from_timestamp(s.parse::<i64>().unwrap() / 1000, 0))
+            Ok(NaiveDateTime::from_timestamp(
+                s.parse::<i64>().unwrap() / 1000,
+                0,
+            ))
         }
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
 
 fn parse_location<'de, D>(de: D) -> Result<f64, D::Error>
-    where D: serde::Deserializer<'de>
+where
+    D: serde::Deserializer<'de>,
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
-        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0)),
+        serde_json::Value::Number(ref i) => Ok(i.as_f64().unwrap() / 10000000.0),
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
