@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+//! Library to parse google location history data
 
 extern crate serde;
 extern crate serde_json;
@@ -9,17 +10,21 @@ extern crate chrono;
 use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize)]
+/// all locations in a LocationHistory file
 pub struct Locations {
+    /// locations
     pub locations: Vec<Location>,
 }
 
 impl Locations {
+    /// parse a json string of locations and return a Locations struct
     pub fn new(json: &str) -> Locations {
         let mut tmp: Locations = serde_json::from_str(json).unwrap();
         tmp.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
         tmp
     }
 
+    /// calculate average time between locations
     pub fn average_time(&self) -> i64 {
         let mut time = 0;
         for i in 1..self.locations.len() {
@@ -29,6 +34,7 @@ impl Locations {
         time / (self.locations.len() as i64)
     }
 
+    /// find the closest Location to a datetime
     pub fn find_closest(&self, time: NaiveDateTime) -> Option<Location> {
         let result = self.locations.binary_search_by(|x| x.timestamp.cmp(&time));
         let index = match result {
@@ -50,7 +56,7 @@ impl Locations {
         None
     }
 
-
+    /// remove locations that are offset more than 300km/h from last location (filters in place)
     pub fn filter_outliers(&mut self) {
         let mut tmp = vec![self.locations[0]];
         for location in &self.locations {
@@ -63,18 +69,25 @@ impl Locations {
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+/// Location sample parsed from LocationHistory.json
 pub struct Location {
     #[serde(rename = "timestampMs", deserialize_with = "parse_date")]
+    /// timestampt this location was sampled at, converted from milliseconds
     pub timestamp: NaiveDateTime,
     #[serde(rename = "latitudeE7", deserialize_with = "parse_location")]
+    /// latitude, converted from lat E7
     pub latitude: f64,
     #[serde(rename = "longitudeE7", deserialize_with = "parse_location")]
+    /// longitude, converted from long E7
     pub longitude: f64,
+    /// accuracy of location sample in meters
     pub accuracy: i32,
+    /// altitude in meters, if available
     pub altitude: Option<i32>,
 }
 
 impl Location {
+    /// calculate the haversine distance between this and another location
     pub fn haversine_distance(&self, other: &Location) -> f64 {
         let long1 = self.longitude.to_radians();
         let long2 = other.longitude.to_radians();
@@ -87,6 +100,7 @@ impl Location {
         c * 6371000.0
     }
 
+    /// calculate the speed in km/h from this location to another location
     pub fn speed_kmh(&self, other: &Location) -> f64 {
         let dist = self.haversine_distance(other);
         let time = self.timestamp.timestamp() - other.timestamp.timestamp();
@@ -149,6 +163,7 @@ mod tests {
                                 } ]
                             } ]
                             }]}"#;
-        let locations = ::Locations::new(&test_data);
+        let mut locations = ::Locations::new(&test_data);
+        locations.filter_outliers();
     }
 }
