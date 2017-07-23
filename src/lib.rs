@@ -143,6 +143,7 @@ mod tests {
                                 "confidence" : 100
                                 } ]
                             } ]
-                            }"#;
+                            }]}"#;
+        let locations = ::Locations::new(&test_data);
     }
 }
