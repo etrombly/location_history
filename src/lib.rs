@@ -10,46 +10,31 @@ extern crate chrono;
 use chrono::NaiveDateTime;
 
 /// group of locations
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Locations {
-    locations: Vec<Location>
-}
+type Locations = Vec<Location>;
 
-impl IntoIterator for Locations {
-    type Item = Location;
-    type IntoIter = ::std::vec::IntoIter<Location>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.locations.into_iter()
-    }
-}
-
-impl Locations {
-    /// parse a json string of locations and return a Locations struct
-    pub fn new(json: &str) -> Locations {
-        let mut tmp: Locations = serde_json::from_str(json).unwrap();
-        tmp.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
-        tmp
-    }
-
-    /// return length of internel vec
-    pub fn len(&self) -> usize {
-        self.locations.len()
-    }
-
+trait LocationsExt {
     /// calculate average time between locations
-    pub fn average_time(&self) -> i64 {
+    fn average_time(&self) -> i64;
+
+    /// find the closest Location to a datetime
+    fn find_closest(&self, time: NaiveDateTime) -> Option<Location>;
+
+    /// remove locations that are offset more than 300km/h from last location
+    fn filter_outliers(self) -> Locations;
+}
+
+impl LocationsExt for Locations {
+    fn average_time(&self) -> i64 {
         let mut time = 0;
         for i in 1..self.len() {
-            time += self.locations[i - 1].timestamp.timestamp() -
-                self.locations[i].timestamp.timestamp()
+            time += self[i - 1].timestamp.timestamp() -
+                self[i].timestamp.timestamp()
         }
         time / (self.len() as i64)
     }
 
-    /// find the closest Location to a datetime
-    pub fn find_closest(&self, time: NaiveDateTime) -> Option<Location> {
-        let result = self.locations.binary_search_by(|x| x.timestamp.cmp(&time));
+    fn find_closest(&self, time: NaiveDateTime) -> Option<Location> {
+        let result = self.binary_search_by(|x| x.timestamp.cmp(&time));
         let index = match result {
             Ok(x) => Some(x),
             // if this is 0 or the len of locations return None
@@ -64,22 +49,34 @@ impl Locations {
 
         if let Some(x) = index {
             if x < self.len() {
-                return Some(self.locations[x]);
+                return Some(self[x]);
             }
         }
         None
     }
 
-    /// remove locations that are offset more than 300km/h from last location
-    pub fn filter_outliers(self) -> Locations {
-        let mut tmp: Vec<Location> = vec![self.locations[0]];
+    fn filter_outliers(self) -> Locations {
+        let mut tmp: Vec<Location> = vec![self[0]];
         for location in self.into_iter() {
             if location.speed_kmh(&tmp[tmp.len() - 1]) < 300.0 {
                 tmp.push(location);
             }
         }
-        Locations{locations: tmp}
+        tmp
     }
+}
+
+/// deserialize location history
+pub fn deserialize(from: &str) -> Locations {
+    #[derive(Deserialize)]
+    struct LocationList {
+        locations: Vec<Location>
+    }
+
+    let deserialized: LocationList = serde_json::from_str(from)
+        .expect("Failed to deserialize");
+    
+    deserialized.locations
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -158,6 +155,8 @@ where
 mod tests {
     #[test]
     fn it_works() {
+        use ::LocationsExt;
+        
         let test_data = r#"{"locations" : [ {
                             "timestampMs" : "1491801919709",
                             "latitudeE7" : 500373489,
@@ -177,6 +176,6 @@ mod tests {
                                 } ]
                             } ]
                             }]}"#;
-        let locations = ::Locations::new(&test_data).filter_outliers();
+        let locations = ::deserialize(&test_data).filter_outliers();
     }
 }
