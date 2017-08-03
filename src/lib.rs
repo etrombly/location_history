@@ -15,14 +15,6 @@ pub struct Locations {
     locations: Vec<Location>
 }
 
-impl<'a> Iterator for &'a Locations {
-    type Item = &'a Location;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.locations.iter().next()
-    }
-}
-
 impl IntoIterator for Locations {
     type Item = Location;
     type IntoIter = ::std::vec::IntoIter<Location>;
@@ -79,12 +71,12 @@ impl Locations {
     }
 
     /// remove locations that are offset more than 300km/h from last location
-    pub fn filter_outliers(&self) -> Locations {
+    pub fn filter_outliers(self) -> Locations {
         let mut tmp: Vec<Location> = vec![self.locations[0]];
-        for location in self {
+        for location in self.into_iter() {
             println!("{}", location.speed_kmh(&tmp[tmp.len() - 1]));
             if location.speed_kmh(&tmp[tmp.len() - 1]) < 300.0 {
-                tmp.push(*location);
+                tmp.push(location);
             }
         }
         Locations{locations: tmp}
