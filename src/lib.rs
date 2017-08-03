@@ -9,24 +9,28 @@ extern crate chrono;
 
 use chrono::NaiveDateTime;
 
+/// group of locations
 pub type Locations = Vec<Location>;
 
+/// functions used for locations
 pub trait LocationsExt {
-    fn new(json: &str) -> Locations;
+    /// parse a json string of locations and return a Locations struct
+    fn load(json: &str) -> Locations;
+    /// calculate average time between locations
     fn average_time(&self) -> i64;
+    /// find the closest Location to a datetime
     fn find_closest(&self, time: NaiveDateTime) -> Option<Location>;
-    fn filter_outliers(mut self);
+    /// remove locations that are offset more than 300km/h from last location
+    fn filter_outliers(&self) -> Locations;
 }
 
 impl LocationsExt for Locations{
-    /// parse a json string of locations and return a Locations struct
-    fn new(json: &str) -> Locations {
+    fn load(json: &str) -> Locations {
         let mut tmp: Vec<Location> = serde_json::from_str(json).unwrap();
         tmp.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
         tmp
     }
 
-    /// calculate average time between locations
     fn average_time(&self) -> i64 {
         let mut time = 0;
         for i in 1..self.len() {
@@ -36,7 +40,6 @@ impl LocationsExt for Locations{
         time / (self.len() as i64)
     }
 
-    /// find the closest Location to a datetime
     fn find_closest(&self, time: NaiveDateTime) -> Option<Location> {
         let result = self.binary_search_by(|x| x.timestamp.cmp(&time));
         let index = match result {
@@ -58,15 +61,14 @@ impl LocationsExt for Locations{
         None
     }
 
-    /// remove locations that are offset more than 300km/h from last location (filters in place)
-    fn filter_outliers(mut self) {
+    fn filter_outliers(&self) -> Locations{
         let mut tmp: Vec<Location> = Vec::new();
         for location in self {
             if location.speed_kmh(&tmp[tmp.len() - 1]) < 300.0 {
-                tmp.push(location);
+                tmp.push(*location);
             }
         }
-        self = tmp;
+        tmp
     }
 }
 
