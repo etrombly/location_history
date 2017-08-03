@@ -23,6 +23,15 @@ impl<'a> Iterator for &'a Locations {
     }
 }
 
+impl IntoIterator for Locations {
+    type Item = Location;
+    type IntoIter = ::std::vec::IntoIter<Location>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.locations.into_iter()
+    }
+}
+
 impl Locations {
     /// parse a json string of locations and return a Locations struct
     pub fn new(json: &str) -> Locations {
