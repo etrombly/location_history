@@ -7,7 +7,7 @@ extern crate location_history;
 
 let mut contents = String::new();
 File::open(file).unwrap().read_to_string(&mut contents).unwrap();
-let locations = location_history.deserialize(&contents);
+let locations = location_history.deserialize(&contents).filter_outliers();
 for location in locations {
     println!("{:?}", location);
 }
