@@ -10,9 +10,10 @@ extern crate chrono;
 use chrono::NaiveDateTime;
 
 /// group of locations
-type Locations = Vec<Location>;
+pub type Locations = Vec<Location>;
 
-trait LocationsExt {
+/// methods used for locations
+pub trait LocationsExt {
     /// calculate average time between locations
     fn average_time(&self) -> i64;
 
