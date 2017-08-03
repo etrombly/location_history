@@ -74,9 +74,10 @@ pub fn deserialize(from: &str) -> Locations {
         locations: Vec<Location>
     }
 
-    let deserialized: LocationList = serde_json::from_str(from)
+    let mut deserialized: LocationList = serde_json::from_str(from)
         .expect("Failed to deserialize");
     
+    deserialized.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     deserialized.locations
 }
 
