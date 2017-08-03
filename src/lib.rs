@@ -74,7 +74,6 @@ impl Locations {
     pub fn filter_outliers(self) -> Locations {
         let mut tmp: Vec<Location> = vec![self.locations[0]];
         for location in self.into_iter() {
-            println!("{}", location.speed_kmh(&tmp[tmp.len() - 1]));
             if location.speed_kmh(&tmp[tmp.len() - 1]) < 300.0 {
                 tmp.push(location);
             }
@@ -178,8 +177,6 @@ mod tests {
                                 } ]
                             } ]
                             }]}"#;
-        let locations = ::Locations::new(&test_data);
-        println!("filtering outliers");
-        //let locations = locations.filter_outliers();
+        let locations = ::Locations::new(&test_data).filter_outliers();
     }
 }
