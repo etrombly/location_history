@@ -178,6 +178,6 @@ mod tests {
                                 } ]
                             } ]
                             }]}"#;
-        let locations = ::deserialize(&test_data).filter_outliers();
+        let _locations = ::deserialize(&test_data).filter_outliers();
     }
 }
