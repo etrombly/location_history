@@ -85,7 +85,7 @@ pub fn deserialize(from: &str) -> Locations {
 /// Location sample parsed from LocationHistory.json
 pub struct Location {
     #[serde(rename = "timestampMs", deserialize_with = "parse_date")]
-    /// timestampt this location was sampled at, converted from milliseconds
+    /// timestamp this location was sampled at, converted from milliseconds
     pub timestamp: NaiveDateTime,
     #[serde(rename = "latitudeE7", deserialize_with = "parse_location")]
     /// latitude, converted from lat E7
