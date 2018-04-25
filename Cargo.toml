@@ -2,17 +2,18 @@
 authors = ["Eric Trombly <etrombly@yahoo.com>"]
 description = "Parse Google LocationHistory.json"
 homepage = "https://github.com/etrombly/location_history.git"
-license = "MIT"
+license = "MIT OR Apache-2.0"
+keywords = ["google", "location", "history", "tracking"]
 name = "location_history"
 readme = "README.md"
 repository = "https://github.com/etrombly/location_history.git"
 version = "0.1.0"
 
 [dependencies]
-serde = "1.0.15"
-serde_derive = "1.0.15"
-serde_json = "1.0.3"
+serde = "1.0.43"
+serde_derive = "1.0.43"
+serde_json = "1.0.16"
 
 [dependencies.chrono]
 features = ["serde"]
-version = "0.4.0"
+version = "0.4.2"
