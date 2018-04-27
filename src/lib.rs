@@ -89,10 +89,10 @@ pub struct Location {
     pub timestamp: NaiveDateTime,
     #[serde(rename = "latitudeE7", deserialize_with = "parse_location")]
     /// latitude, converted from lat E7
-    pub latitude: f64,
+    pub latitude: f32,
     #[serde(rename = "longitudeE7", deserialize_with = "parse_location")]
     /// longitude, converted from long E7
-    pub longitude: f64,
+    pub longitude: f32,
     /// accuracy of location sample in meters
     pub accuracy: i32,
     /// altitude in meters, if available
@@ -101,7 +101,7 @@ pub struct Location {
 
 impl Location {
     /// calculate the haversine distance between this and another location
-    pub fn haversine_distance(&self, other: &Location) -> f64 {
+    pub fn haversine_distance(&self, other: &Location) -> f32 {
         let long1 = self.longitude.to_radians();
         let long2 = other.longitude.to_radians();
         let lat1 = self.latitude.to_radians();
@@ -114,11 +114,11 @@ impl Location {
     }
 
     /// calculate the speed in km/h from this location to another location
-    pub fn speed_kmh(&self, other: &Location) -> f64 {
+    pub fn speed_kmh(&self, other: &Location) -> f32 {
         let dist = self.haversine_distance(other);
         let time = self.timestamp.timestamp() - other.timestamp.timestamp();
         if time > 0 {
-            let meter_second = dist / time as f64;
+            let meter_second = dist / time as f32;
             meter_second * 3.6
         } else {
             dist / 1000.0
@@ -142,13 +142,13 @@ where
     }
 }
 
-fn parse_location<'de, D>(de: D) -> Result<f64, D::Error>
+fn parse_location<'de, D>(de: D) -> Result<f32, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
     let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
     match deser_result {
-        serde_json::Value::Number(ref i) => Ok(i.as_f64().unwrap() / 10000000.0),
+        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0) as f32),
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
