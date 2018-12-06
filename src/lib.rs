@@ -1,13 +1,8 @@
 #![warn(missing_docs)]
 //! Library to parse google location history data
 
-extern crate serde;
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
-extern crate chrono;
-
 use chrono::NaiveDateTime;
+use serde_derive::{Deserialize, Serialize};
 
 /// group of locations
 pub type Locations = Vec<Location>;
@@ -28,8 +23,7 @@ impl LocationsExt for Locations {
     fn average_time(&self) -> i64 {
         let mut time = 0;
         for i in 1..self.len() {
-            time += self[i - 1].timestamp.timestamp() -
-                self[i].timestamp.timestamp()
+            time += self[i - 1].timestamp.timestamp() - self[i].timestamp.timestamp()
         }
         time / (self.len() as i64)
     }
@@ -71,13 +65,14 @@ impl LocationsExt for Locations {
 pub fn deserialize(from: &str) -> Locations {
     #[derive(Deserialize)]
     struct LocationList {
-        locations: Vec<Location>
+        locations: Vec<Location>,
     }
 
-    let mut deserialized: LocationList = serde_json::from_str(from)
-        .expect("Failed to deserialize");
-    
-    deserialized.locations.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+    let mut deserialized: LocationList = serde_json::from_str(from).expect("Failed to deserialize");
+
+    deserialized
+        .locations
+        .sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     deserialized.locations
 }
 
@@ -110,7 +105,7 @@ impl Location {
         let dlat = lat2 - lat1;
         let a = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
         let c = 2.0 * a.sqrt().asin();
-        c * 6371000.0
+        c * 6_371_000.0
     }
 
     /// calculate the speed in km/h from this location to another location
@@ -130,14 +125,12 @@ fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
+    let deser_result: serde_json::Value = r#try!(serde::Deserialize::deserialize(de));
     match deser_result {
-        serde_json::Value::String(ref s) => {
-            Ok(NaiveDateTime::from_timestamp(
-                s.parse::<i64>().unwrap() / 1000,
-                0,
-            ))
-        }
+        serde_json::Value::String(ref s) => Ok(NaiveDateTime::from_timestamp(
+            s.parse::<i64>().unwrap() / 1000,
+            0,
+        )),
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
@@ -146,9 +139,9 @@ fn parse_location<'de, D>(de: D) -> Result<f32, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let deser_result: serde_json::Value = try!(serde::Deserialize::deserialize(de));
+    let deser_result: serde_json::Value = r#try!(serde::Deserialize::deserialize(de));
     match deser_result {
-        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10000000.0) as f32),
+        serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10_000_000.0) as f32),
         _ => Err(serde::de::Error::custom("Unexpected value")),
     }
 }
@@ -157,8 +150,8 @@ where
 mod tests {
     #[test]
     fn it_works() {
-        use ::LocationsExt;
-        
+        use crate::LocationsExt;
+
         let test_data = r#"{"locations" : [ {
                             "timestampMs" : "1491801919709",
                             "latitudeE7" : 500373489,
@@ -178,6 +171,6 @@ mod tests {
                                 } ]
                             } ]
                             }]}"#;
-        let _locations = ::deserialize(&test_data).filter_outliers();
+        let _locations = crate::deserialize(&test_data).filter_outliers();
     }
 }
