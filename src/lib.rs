@@ -125,7 +125,7 @@ fn parse_date<'de, D>(de: D) -> Result<NaiveDateTime, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let deser_result: serde_json::Value = r#try!(serde::Deserialize::deserialize(de));
+    let deser_result: serde_json::Value = serde::Deserialize::deserialize(de)?;
     match deser_result {
         serde_json::Value::String(ref s) => Ok(NaiveDateTime::from_timestamp(
             s.parse::<i64>().unwrap() / 1000,
@@ -139,7 +139,7 @@ fn parse_location<'de, D>(de: D) -> Result<f32, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let deser_result: serde_json::Value = r#try!(serde::Deserialize::deserialize(de));
+    let deser_result: serde_json::Value = serde::Deserialize::deserialize(de)?;
     match deser_result {
         serde_json::Value::Number(ref i) => Ok((i.as_f64().unwrap() / 10_000_000.0) as f32),
         _ => Err(serde::de::Error::custom("Unexpected value")),
